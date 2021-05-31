@@ -2,8 +2,8 @@
  * @file functions.c
  * @author Cedric DEDENON
  * @brief 
- * @version 0.1
- * @date 2021-05-28
+ * @version 0.2
+ * @date 2021-05-31
  * 
  * @copyright Copyright (c) 2021
  * 
@@ -37,11 +37,11 @@ void methodRLE(char *nameFile, char c_d){
     }
   
     if((file1=fopen(fileName1,"r")) == (FILE*) NULL || (file2=fopen(fileName2, "w+")) == (FILE*) NULL){
-        printf("Erreur pendant l'ouverture de fichier %s", nameFile);
+        printf("\nErreur pendant l'ouverture de fichier %s\n", nameFile);
         exit(567);
     }
     else{
-        printf("Ouverture reussi de %s\n\n", nameFile);
+        printf("\nOuverture reussi de %s\n", nameFile);
         // On lit ligne par ligne le fichier, et on applique l'algorithme de compression ou de décompression correspondant
         while(feof(file1) == 0){
             fgets(temp, TMAX, file1);
@@ -69,49 +69,64 @@ void methodRLE(char *nameFile, char c_d){
  */
 char* algoCompressionRLE(char *content){
     char *temp = "";
-    int i=0, j=0, k=0, nb=1;
+    int i=0, j=0, k=0, nb=1, p=0;
     char c, c_prev=content[0];
 
     for(i=1; content[i] != '\0'; i++){
         c = content[i];
         c_prev = content[i-1];
 
-        if(c_prev == '!'){
-            temp[j] = c_prev; j++;
-            temp[j] = c_prev; j++;
-        } 
-
-        else if(c == c_prev){    
+        if(c == c_prev){    
             nb++;
-            if(nb == 9){
-                temp[j] = '!'; j++;
-                temp[j] = nb + '0'; j++;
-                temp[j] = c_prev; j++;
-                nb=0;
-            } 
         } else{
+            if(nb>=10){
+                p = floor(nb/10);
+                for(k=0;k<p;k++){
+                    temp[j] = CAR_1; j++;
+                    temp[j] = CAR_2; j++;
+                }
+                nb = nb-(p*10);
+                if(nb == 1){
+                    temp[j] = c_prev; j++;
+                }
+                if(nb == 0) nb=1;
+            }
+
             if(nb>=1 && nb<4){
                 for(k=0;k<nb;k++){
                     temp[j] = c_prev; j++;
                 }
                 nb=1;
             }
-            else if (nb>=4){
-                temp[j] = '!'; j++;
+            else if (nb>=4 && nb<10){
+                temp[j] = CAR_1; j++;
                 temp[j] = nb + '0'; j++;
                 temp[j] = c_prev; j++;
                 nb=1;
-            }   
+            } 
         }           
     } 
-      
+
+ if(nb>=10){
+    p = floor(nb/10);
+    for(k=0;k<p;k++){
+        temp[j] = CAR_1; j++;
+        temp[j] = CAR_2; j++;
+    }
+    nb = nb-(p*10);
+    if(nb == 1){
+        temp[j] = c; j++;
+    }
+    if(nb == 0) nb=1;
+}
+
     if(nb>=1 && nb<4){
         for(k=0;k<nb;k++){
             temp[j] = c; j++;
         }
         nb=1;
-    } else if (nb>=4){
-        temp[j] = '!'; j++;
+    } else if (nb>=4 && nb<10){
+        temp[j] = CAR_1; j++;
         temp[j] = nb + '0'; j++;
         temp[j] = c; j++;
         nb=1;
@@ -121,7 +136,6 @@ char* algoCompressionRLE(char *content){
     return temp;
 }
 
-
 /**
  * @brief Algorithme de décompression du fichier (ligne par ligne) selon la méthode RLE
  * 
@@ -130,37 +144,34 @@ char* algoCompressionRLE(char *content){
  */
 char* algoDecompressionRLE(char *content){
     char *temp = "";
-    int i=0, j=0, k=0, nb=1, nb_ex=1;
+    int i=0, j=0, k=0, nb=0, add_nb=0;
     char c, c_prev=content[0];
 
     for(i=1; content[i] != '\0'; i++){
         c = content[i];
         c_prev = content[i-1];
 
-        if(c_prev == '!'){
-            if(c == '!'){
-                nb_ex++;
-            }else{
-                if(nb_ex > 1){
-                    nb_ex = ceil(nb_ex/2);
-                    for(k=0;k<nb_ex;k++){
-                        temp[j] = c_prev; j++;
-                    }
-                    nb_ex=1;
-                }
-                if(isdigit(c)){
-                    nb = c - '0';
-                }
+        if(c_prev == CAR_1){
+            if(c == CAR_2){
+                add_nb += 10;
+            }
+            if(isdigit(c)){
+                nb = c - '0';
             }
         }else{
-           if(nb > 1){
+            if(add_nb != 0 && c != CAR_1){
+                nb += add_nb;
+                add_nb = 0;
+            }
+
+            if(nb > 1){
                 for(k=1;k<nb;k++){
                     temp[j] = c; j++;
                 }   
-                nb = 1;
-            } else{
+                nb = 0;
+            } else if(c_prev != CAR_2){
                 temp[j] = c_prev; j++;
-            }  
+            } 
         }
     }
     temp[j] = c; j++;

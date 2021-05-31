@@ -2,8 +2,8 @@
  * @file functions.h
  * @author Cedric DEDENON
  * @brief 
- * @version 0.1
- * @date 2021-05-28
+ * @version 0.2
+ * @date 2021-05-31
  * 
  * @copyright Copyright (c) 2021
  * 
@@ -19,6 +19,8 @@
 #include <math.h>
 
 #define TMAX 500
+#define CAR_1 '#'
+#define CAR_2 '&'
 
 void methodRLE(char *nameFile, char c_d);
 char* algoCompressionRLE(char *text);

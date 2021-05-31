@@ -2,8 +2,8 @@
  * @file main.c
  * @author Cedric DEDENON
  * @brief 
- * @version 0.1
- * @date 2021-05-28
+ * @version 0.2
+ * @date 2021-05-31
  * 
  * @copyright Copyright (c) 2021
  * 
